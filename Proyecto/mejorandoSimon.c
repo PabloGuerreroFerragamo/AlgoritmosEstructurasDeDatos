@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <unistd.h>//Libreria del sleep
 #include <windows.h>
-#include "colors.h"
 #include <time.h>
+
 
 #define RESET_COLOR    "\x1b[0m"
 #define NEGRO_T        "\x1b[30m"
@@ -73,6 +73,28 @@ int dequeue(DQueue *dq){//tipo de acuerdo al retorno
     return e;//RETORNO ELEMENT, EL CUAL DEBE COINCIDIR CON EL RETORNO ERROR
 }
 
+void imprimir(DQueue *dq){
+    element e,e_dos;
+    DQueue aux;
+    createDQ(&aux);
+    while(!is_Empty(*dq)){
+        e=dequeue(dq);
+        enqueueDQ(&aux,e);
+        printf("%d",e);
+    } 
+    //regresamos a dq 
+    while(!is_Empty(aux)){
+        e_dos=dequeue(&aux);
+        enqueueDQ(dq,e_dos);
+    }
+}
+
+void deleteDQ(DQueue *dq) {
+    while (!is_Empty(*dq)) {
+        dequeue(dq);
+    }
+}
+
 void rojo(){
     printf(ROJO_F "          "RESET_COLOR "\n");
     printf(ROJO_F "          "RESET_COLOR "\n");
@@ -80,6 +102,18 @@ void rojo(){
     printf(ROJO_F "          "RESET_COLOR "\n");
 
     usleep(300000);//retraso
+
+    printf("\033[F\033[K");//Sube una línea y borra la línea completa
+    printf("\033[F\033[K");
+    printf("\033[F\033[K");
+    printf("\033[F\033[K");
+
+    
+
+    printf("          \n");
+    printf("          \n");
+    printf("          \n");
+    printf("          \n");
 
     printf("\033[F\033[K");//Sube una línea y borra la línea completa
     printf("\033[F\033[K");
@@ -99,6 +133,10 @@ void verde(){
     printf("\033[F\033[K");
     printf("\033[F\033[K");
     printf("\033[F\033[K");
+
+
+    
+    
 }
 
 void azul(){
@@ -162,7 +200,7 @@ void imprimirValor(int condicion){
     }
 }
 
-void coloresAnteriores(DQueue *dq){
+void coloresAnteriores(DQueue *dq){//BIEN
     element e,e_dos;
     DQueue aux;
     createDQ(&aux);
@@ -178,70 +216,64 @@ void coloresAnteriores(DQueue *dq){
     }
 }
 
+
+int comparador(DQueue *colaUno, DQueue *colaDos) {
+    nodeq *tempUno = colaUno->head;
+    nodeq *tempDos = colaDos->head;
+
+    while (tempUno != NULL && tempDos != NULL) {
+        if (tempUno->e != tempDos->e) {
+            return 0; // Las colas no son iguales
+        }
+        tempUno = tempUno->next;
+        tempDos = tempDos->next;
+    }
+
+    // Si hemos llegado aquí, significa que una de las colas ha terminado
+    return 1; // Las colas son iguales hasta donde la cola más corta tiene elementos
+}
+
 int main(){
     srand(time(NULL));
 
-    DQueue cola,colaRespuestas,colaAux;
-    createDQ(&cola);
-    createDQ(&colaRespuestas);
-    createDQ(&colaAux);
+    DQueue cola,colaRespuesta;
 
-    int i,j,aleatorio,contadorWhile=0,respuesta=0,primerJuego=0,nivel=1,historialNiveles=0,what=0;
-    while(contadorWhile<1){
+    createDQ(&cola);
+    createDQ(&colaRespuesta);
+
+    int respuesta=0,contador=0, aleatorio=0,i,nivel=1;
+
+    while(contador<1){
+        coloresAnteriores(&cola);
+
         aleatorio=(rand()%4)+1;
         enqueueDQ(&cola,aleatorio);
 
-        if(primerJuego!=0){
-            colaAux=cola;
-            coloresAnteriores(&colaAux);
-            imprimirValor(aleatorio);
-        }    
+        imprimirValor(aleatorio);
 
-        if(primerJuego==0){
-            imprimirValor(aleatorio);
-        }
-       
         printf("Ingresa 1 -> Rojo\n");
         printf("Ingresa 2 -> Verde\n");
         printf("Ingresa 3 -> Azul\n");
         printf("Ingresa 4 -> Amarillo\n");
-        
-        
-        while(historialNiveles<nivel){
-        printf("Respuesta(%d): While(%d)",historialNiveles+1,what);
+
+        deleteDQ(&colaRespuesta);
+
+        for(i=0;i<nivel;i++){
+        printf("Respuesta: ");
         scanf("%d",&respuesta);
-        enqueueDQ(&colaRespuestas,respuesta);
-        historialNiveles++;
-        what++;
-        }
-        
-        historialNiveles=1;
+        enqueueDQ(&colaRespuesta,respuesta);
 
-        //Primer numero
-        if((cola.head->e==colaRespuestas.head->e)&&primerJuego==0){
-            enqueueDQ(&cola,aleatorio);
-            primerJuego++;
+        if(!comparador(&cola,&colaRespuesta)){
+            printf("Respuesta incorrecta");
+            contador++;
+            break;
+        }
+        }
+
+        if(comparador(&cola,&colaRespuesta)){
             nivel++;
-        }
-        else if(respuesta==aleatorio){
-            
-        }
-        else{
-            printf("Opcion equivocada");
-            contadorWhile++;
-        }
-
-
-        if((cola.head->e==colaRespuestas.head->e)&&primerJuego!=0){
-
-            nivel++;
-        }
-        else{
-            printf("Opcion equivocada, era %d",cola.tail->e);
-            contadorWhile++;
-        }
+        }        
+    }        
         
-    }
-
 return 0;
 }

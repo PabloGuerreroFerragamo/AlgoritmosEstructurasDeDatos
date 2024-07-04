@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <unistd.h>//Libreria del sleep
 #include <windows.h>
-#include "colors.h"
 #include <time.h>
+
 
 #define RESET_COLOR    "\x1b[0m"
 #define NEGRO_T        "\x1b[30m"
@@ -47,41 +47,63 @@ int is_Empty(DQueue dq){
         return 0;
 }
 
-void enqueueDQ(DQueue *dq,element ele){
+void enqueueDQ(DQueue *dq, element ele){
     nodeq *new;
-    new=(nodeq*)malloc(sizeof(nodeq));
-    new->e=ele;
-    new->next=NULL;
+    new = (nodeq*)malloc(sizeof(nodeq));
+    new->e = ele;
+    new->next = NULL;
     if(is_Empty(*dq))
-        dq->head=new;
+        dq->head = new;
     else
-        dq->tail->next=new;
-    dq->tail=new;
+        dq->tail->next = new;
+    dq->tail = new;
 }
 
-int dequeue(DQueue *dq){//tipo de acuerdo al retorno
+int dequeue(DQueue *dq){
     if(is_Empty(*dq)){
         printf("Esta vacia");
-        return -1;//SOLO FUNCIONA CON NUMEROS
+        return -1;
     }
-    nodeq *aux=dq->head;
-    element e=aux->e;
-    if(dq->head==dq->tail)
-        dq->tail=NULL;
-    dq->head=dq->head->next;
+    nodeq *aux = dq->head;
+    element e = aux->e;
+    if(dq->head == dq->tail)
+        dq->tail = NULL;
+    dq->head = dq->head->next;
     free(aux);
-    return e;//RETORNO ELEMENT, EL CUAL DEBE COINCIDIR CON EL RETORNO ERROR
+    return e;
+}
+
+void imprimir(DQueue *dq){
+    element e, e_dos;
+    DQueue aux;
+    createDQ(&aux);
+    while(!is_Empty(*dq)){
+        e = dequeue(dq);
+        enqueueDQ(&aux, e);
+        printf("%d", e);
+    } 
+    // Regresamos a dq 
+    while(!is_Empty(aux)){
+        e_dos = dequeue(&aux);
+        enqueueDQ(dq, e_dos);
+    }
+}
+
+void deleteDQ(DQueue *dq) {
+    while (!is_Empty(*dq)) {
+        dequeue(dq);
+    }
 }
 
 void rojo(){
-    printf(ROJO_F "          "RESET_COLOR "\n");
-    printf(ROJO_F "          "RESET_COLOR "\n");
-    printf(ROJO_F "          "RESET_COLOR "\n");
-    printf(ROJO_F "          "RESET_COLOR "\n");
+    printf(ROJO_F "          " RESET_COLOR "\n");
+    printf(ROJO_F "          " RESET_COLOR "\n");
+    printf(ROJO_F "          " RESET_COLOR "\n");
+    printf(ROJO_F "          " RESET_COLOR "\n");
 
-    usleep(300000);//retraso
+    usleep(300000);
 
-    printf("\033[F\033[K");//Sube una línea y borra la línea completa
+    printf("\033[F\033[K");
     printf("\033[F\033[K");
     printf("\033[F\033[K");
     printf("\033[F\033[K");
@@ -93,7 +115,7 @@ void verde(){
     printf("          " VERDE_F "          " RESET_COLOR "\n");
     printf("          " VERDE_F "          " RESET_COLOR "\n");
 
-    usleep(300000);//retraso
+    usleep(300000);
 
     printf("\033[F\033[K");
     printf("\033[F\033[K");
@@ -112,7 +134,7 @@ void azul(){
     printf(AZUL_F "          " RESET_COLOR "\n");
     printf(AZUL_F "          " RESET_COLOR "\n");
 
-    usleep(300000);//retraso
+    usleep(300000);
 
     printf("\033[F\033[K");
     printf("\033[F\033[K");
@@ -135,7 +157,7 @@ void amarillo(){
     printf("          " AMARILLO_F "          " RESET_COLOR "\n");
     printf("          " AMARILLO_F "          " RESET_COLOR "\n");
 
-    usleep(300000);//retraso
+    usleep(300000);
 
     printf("\033[F\033[K");
     printf("\033[F\033[K");
@@ -148,100 +170,81 @@ void amarillo(){
 }
 
 void imprimirValor(int condicion){
-    if(condicion==1){
+    if(condicion == 1){
         rojo();
     }
-    else if(condicion==2){
+    else if(condicion == 2){
         verde();
     }
-    else if(condicion==3){
+    else if(condicion == 3){
         azul();
     }
-    else if(condicion==4){
+    else if(condicion == 4){
         amarillo();
     }
 }
 
 void coloresAnteriores(DQueue *dq){
-    element e,e_dos;
+    element e, e_dos;
     DQueue aux;
     createDQ(&aux);
     while(!is_Empty(*dq)){
-        e=dequeue(dq);
-        enqueueDQ(&aux,e);
-        //colaAux.head->e
+        e = dequeue(dq);
+        enqueueDQ(&aux, e);
         imprimirValor(e);
     }
     while(!is_Empty(aux)){
-        e_dos=dequeue(&aux);
-        enqueueDQ(dq,e_dos);
+        e_dos = dequeue(&aux);
+        enqueueDQ(dq, e_dos);
     }
+}
+
+int comparador(DQueue *colaUno, DQueue *colaDos) {
+    nodeq *tempUno = colaUno->head;
+    nodeq *tempDos = colaDos->head;
+
+    while (tempUno != NULL && tempDos != NULL) {
+        if (tempUno->e != tempDos->e) {
+            return 0;
+        }
+        tempUno = tempUno->next;
+        tempDos = tempDos->next;
+    }
+    return 1;
 }
 
 int main(){
     srand(time(NULL));
 
-    DQueue cola,colaRespuestas,colaAux;
+    DQueue cola, colaRespuesta;
+
     createDQ(&cola);
-    createDQ(&colaRespuestas);
-    createDQ(&colaAux);
+    createDQ(&colaRespuesta);
 
-    int i,j,aleatorio,contadorWhile=0,respuesta=0,primerJuego=0,nivel=1,historialNiveles=0,what=0;
-    while(contadorWhile<1){
-        aleatorio=(rand()%4)+1;
-        enqueueDQ(&cola,aleatorio);
+    int respuesta = 0, contador = 0, aleatorio = 0;
 
-        if(primerJuego!=0){
-            colaAux=cola;
-            coloresAnteriores(&colaAux);
-            imprimirValor(aleatorio);
-        }    
+    while(contador < 1){
+        aleatorio = (rand()%4) + 1;
+        enqueueDQ(&cola, aleatorio);
 
-        if(primerJuego==0){
-            imprimirValor(aleatorio);
-        }
-       
+        coloresAnteriores(&cola);
+
         printf("Ingresa 1 -> Rojo\n");
         printf("Ingresa 2 -> Verde\n");
         printf("Ingresa 3 -> Azul\n");
         printf("Ingresa 4 -> Amarillo\n");
+        printf("Respuesta: ");
+        scanf("%d", &respuesta);
         
-        
-        while(historialNiveles<nivel){
-        printf("Respuesta(%d): While(%d)",historialNiveles+1,what);
-        scanf("%d",&respuesta);
-        enqueueDQ(&colaRespuestas,respuesta);
-        historialNiveles++;
-        what++;
-        }
-        
-        historialNiveles=1;
+        enqueueDQ(&colaRespuesta, respuesta);
 
-        //Primer numero
-        if((cola.head->e==colaRespuestas.head->e)&&primerJuego==0){
-            enqueueDQ(&cola,aleatorio);
-            primerJuego++;
-            nivel++;
-        }
-        else if(respuesta==aleatorio){
-            
+        if(comparador(&cola, &colaRespuesta)){
+            // Se puede agregar alguna lógica si las colas son iguales
         }
         else{
-            printf("Opcion equivocada");
-            contadorWhile++;
+            contador++;
         }
-
-
-        if((cola.head->e==colaRespuestas.head->e)&&primerJuego!=0){
-
-            nivel++;
-        }
-        else{
-            printf("Opcion equivocada, era %d",cola.tail->e);
-            contadorWhile++;
-        }
-        
     }
-
-return 0;
+        
+    return 0;
 }
